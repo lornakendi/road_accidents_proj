@@ -30,5 +30,6 @@ Thumbs.db
 # Project specific
 data/raw/
 *.log
-*.pkl
-!models/*.pkl  # Keep models folder but ignore other pkl files
+
+# Allow model files
+!models/*.pkl
