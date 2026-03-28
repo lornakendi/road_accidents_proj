@@ -32,5 +32,31 @@ To analyze spatial, temporal, and risk factors contributing to road accident sev
 
 Data-driven approaches can significantly improve road safety by enabling targeted interventions.
 
+# Kenya Road Accident Fatality Predictor
+
+A machine learning web application that predicts the probability of fatal road accidents in Kenya based on road user types and location.
+
+## Features
+
+- 🔮 Predicts fatality probability for road accidents
+- 📍 Location-based predictions for major Kenyan cities
+- 🚶 Supports different road user types (pedestrians, motorcyclists, matatus)
+- 🎯 Real-time predictions with confidence scores
+- 🌐 Web interface and REST API
+
+## Model
+
+The model is trained on 2,595 road accident records from Kenya using Logistic Regression with features:
+- Road user types (pedestrian, motorcyclist, matatu)
+- Geographic location (latitude, longitude)
+
+### Accuracy
+- Overall accuracy: 92%
+- AUC Score: 0.94
+
+## API Usage
+
+### Predict Endpoint
+
 🔗 Project Link
 (https://github.com/lornakendi/road_accidents_proj)

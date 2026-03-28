@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenya Road Accident Fatality Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input {
+            width: auto;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result.fatal {
+            background: #fee;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .result.non-fatal {
+            background: #e8f5e9;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .result h3 {
+            margin-bottom: 15px;
+        }
+        
+        .probability-bar {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fee;
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+            .checkbox-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Kenya Road Accident Fatality Predictor</h1>
+            <p>Predict the likelihood of a fatal accident based on road user types and location</p>
+        </div>
+        
+        <div class="content">
+            <form id="predictionForm">
+                <div class="form-group">
+                    <label>Road Users Involved:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="pedestrian" value="1"> 🚶 Pedestrian
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="motorcyclist" value="1"> 🏍️ Motorcyclist
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="matatu" value="1"> 🚐 Matatu
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Location:</label>
+                    <select id="location">
+                        <option value="custom">Custom Location</option>
+                        <option value="nairobi">Nairobi (-1.2833, 36.8236)</option>
+                        <option value="mombasa">Mombasa (-4.0435, 39.6682)</option>
+                        <option value="kisumu">Kisumu (-0.0917, 34.7680)</option>
+                        <option value="nakuru">Nakuru (-0.3031, 36.0800)</option>
+                        <option value="eldoret">Eldoret (0.5143, 35.2698)</option>
+                        <option value="thika">Thika (-1.0388, 37.0835)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="customLocation" style="display: none;">
+                    <label>Latitude:</label>
+                    <input type="number" id="latitude" step="any" placeholder="e.g., -1.2833">
+                    <label style="margin-top: 10px;">Longitude:</label>
+                    <input type="number" id="longitude" step="any" placeholder="e.g., 36.8236">
+                </div>
+                
+                <button type="submit">Predict Fatality Risk</button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;">Analyzing accident data...</p>
+            </div>
+            
+            <div class="result" id="result">
+                <h3>Prediction Result</h3>
+                <div id="resultMessage"></div>
+                <div class="probability-bar">
+                    <div class="probability-fill" id="probabilityFill" style="width: 0%">0%</div>
+                </div>
+                <div id="riskDetails"></div>
+            </div>
+            
+            <div class="error" id="error">
+                <strong>⚠️ Error:</strong> <span id="errorMessage"></span>
+            </div>
+            
+            <div class="info-box">
+                <strong>💡 How it works:</strong><br>
+                This model predicts the probability of a fatal road accident based on:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Road user types involved (pedestrian, motorcyclist, matatu)</li>
+                    <li>Geographic location (latitude and longitude)</li>
+                </ul>
+                The model was trained on 2,595 road accident records from Kenya.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('predictionForm');
+        const loading = document.getElementById('loading');
+        const resultDiv = document.getElementById('result');
+        const errorDiv = document.getElementById('error');
+        const locationSelect = document.getElementById('location');
+        const customLocationDiv = document.getElementById('customLocation');
+        
+        const locations = {
+            nairobi: { lat: -1.2833, lng: 36.8236 },
+            mombasa: { lat: -4.0435, lng: 39.6682 },
+            kisumu: { lat: -0.0917, lng: 34.7680 },
+            nakuru: { lat: -0.3031, lng: 36.0800 },
+            eldoret: { lat: 0.5143, lng: 35.2698 },
+            thika: { lat: -1.0388, lng: 37.0835 }
+        };
+        
+        locationSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customLocationDiv.style.display = 'block';
+            } else {
+                customLocationDiv.style.display = 'none';
+            }
+        });
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get road user values
+            const pedestrian = document.getElementById('pedestrian').checked ? 1 : 0;
+            const motorcyclist = document.getElementById('motorcyclist').checked ? 1 : 0;
+            const matatu = document.getElementById('matatu').checked ? 1 : 0;
+            
+            // Get location
+            let latitude, longitude;
+            const selectedLocation = locationSelect.value;
+            
+            if (selectedLocation === 'custom') {
+                latitude = parseFloat(document.getElementById('latitude').value);
+                longitude = parseFloat(document.getElementById('longitude').value);
+                
+                if (isNaN(latitude) || isNaN(longitude)) {
+                    showError('Please enter valid latitude and longitude coordinates.');
+                    return;
+                }
+            } else {
+                latitude = locations[selectedLocation].lat;
+                longitude = locations[selectedLocation].lng;
+            }
+            
+            // Prepare request data
+            const data = {
+                pedestrian: pedestrian,
+                motorcyclist: motorcyclist,
+                matatu: matatu,
+                latitude: latitude,
+                longitude: longitude
+            };
+            
+            // Show loading
+            loading.classList.add('show');
+            resultDiv.classList.remove('show');
+            errorDiv.classList.remove('show');
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayResult(result, data);
+                } else {
+                    showError(result.error || 'An error occurred');
+                }
+            } catch (error) {
+                showError('Unable to connect to the prediction service. Please make sure the API is running.');
+            } finally {
+                loading.classList.remove('show');
+            }
+        });
+        
+        function displayResult(result, inputData) {
+            const probability = result.probability;
+            const riskLevel = result.risk_level;
+            const isFatal = result.prediction === 1;
+            
+            const roadUsers = [];
+            if (inputData.pedestrian) roadUsers.push('Pedestrian');
+            if (inputData.motorcyclist) roadUsers.push('Motorcyclist');
+            if (inputData.matatu) roadUsers.push('Matatu');
+            const roadUserText = roadUsers.length > 0 ? roadUsers.join(' + ') : 'Other/Unknown';
+            
+            const resultMessage = isFatal ? 
+                `<strong style="color: #e74c3c;">⚠️ HIGH RISK - FATAL ACCIDENT LIKELY</strong><br>
+                 The model predicts a high probability of fatality for this accident scenario.` :
+                `<strong style="color: #27ae60;">✅ LOW RISK - NON-FATAL ACCIDENT LIKELY</strong><br>
+                 The model predicts a low probability of fatality for this accident scenario.`;
+            
+            const riskDetails = `
+                <p><strong>📊 Analysis Details:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Road Users:</strong> ${roadUserText}</li>
+                    <li><strong>Location:</strong> (${inputData.latitude.toFixed(4)}, ${inputData.longitude.toFixed(4)})</li>
+                    <li><strong>Risk Level:</strong> ${riskLevel}</li>
+                    <li><strong>Model Confidence:</strong> ${(probability * 100).toFixed(1)}%</li>
+                </ul>
+                <p style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                    <strong>⚠️ Important:</strong> This is a predictive model based on historical data. 
+                    Always prioritize safety and follow traffic regulations.
+                </p>
+            `;
+            
+            const probabilityPercent = (probability * 100).toFixed(1);
+            
+            document.getElementById('resultMessage').innerHTML = resultMessage;
+            document.getElementById('riskDetails').innerHTML = riskDetails;
+            
+            const fillElement = document.getElementById('probabilityFill');
+            fillElement.style.width = `${probabilityPercent}%`;
+            fillElement.textContent = `${probabilityPercent}%`;
+            
+            resultDiv.className = `result ${isFatal ? 'fatal' : 'non-fatal'} show`;
+        }
+        
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorDiv.classList.add('show');
+        }
+    </script>
+</body>
+</html>

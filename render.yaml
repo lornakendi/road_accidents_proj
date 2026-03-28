@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: kenya-road-accident-predictor
+    runtime: python
+    repo: https://github.com/lornakendi/road_accidents_proj 
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.11
+      - key: FLASK_ENV
+        value: production
